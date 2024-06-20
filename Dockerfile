@@ -1,5 +1,5 @@
 # Use the official Rust image as the build environment
-FROM rust:1.67.0 as builder
+FROM rust:1.72.0 as builder
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -10,8 +10,11 @@ COPY . .
 # Build the application
 RUN cargo build --release
 
-# Use a minimal base image for the runtime
-FROM debian:buster-slim
+# Use an Ubuntu base image for the runtime
+FROM ubuntu:22.04
+
+# Install necessary runtime dependencies
+RUN apt-get update && apt-get install -y libssl-dev
 
 # Set the working directory
 WORKDIR /usr/src/app

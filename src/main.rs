@@ -10,6 +10,11 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
         return HttpResponse::BadRequest().body("Query string is empty");
     }
 
+    // Check length is between 10 and 75 characters
+    if query_string.len() < 10 || query_string.len() > 50 {
+        return HttpResponse::BadRequest().body("Invalid query string");
+    }
+
     match QrCode::new(query_string) {
         Ok(code) => {
             let svg = code.render::<svg::Color>()
@@ -36,7 +41,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .route("/generate", web::get().to(generate_qr))
     })
-    .bind("127.0.0.1:8080")?
+    .workers(num_cpus::get() * 2)  // Number of worker threads
+    .bind("0.0.0.0:8080")?
     .run()
     .await
 }
