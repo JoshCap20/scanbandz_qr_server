@@ -13,7 +13,7 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
     }
 
     // Check length is between 10 and 75 characters
-    if query_string.len() < 10 || query_string.len() > 50 {
+    if query_string.len() < 50 || query_string.len() > 1000 {
         return HttpResponse::BadRequest().body("Invalid query string");
     }
 
