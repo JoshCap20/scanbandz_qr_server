@@ -1,44 +1,46 @@
-# Use the official Rust image as the build environment
+# Stage 1: Build the binary
 FROM rust:1.72.0 as builder
 
-# Install necessary tools for cross-compilation
+# Install cross-compilation tools
 RUN apt-get update && apt-get install -y \
     gcc-aarch64-linux-gnu \
     libc6-dev-arm64-cross \
-    binutils-aarch64-linux-gnu
+    binutils-aarch64-linux-gnu \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
+# Add the target for cross-compilation
+RUN rustup target add aarch64-unknown-linux-gnu
+
+# Set up working directory
 WORKDIR /usr/src/app
 
 # Copy the source code
 COPY . .
 
-# Build the application for the ARM architecture
-RUN rustup target add aarch64-unknown-linux-gnu
+# Build the binary for the specified target
 RUN cargo build --release --target=aarch64-unknown-linux-gnu
 
-# Use an Ubuntu base image for the runtime to avoid GLIBC issues
+# Stage 2: Create the final image
 FROM ubuntu:22.04
 
-# Install necessary runtime dependencies
-RUN apt-get update && apt-get install -y libssl-dev
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
-WORKDIR /home/appuser/app
-
-# Add a non-root user
+# Create a new user and group
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-# Copy the built binary from the builder stage
+# Set up working directory
+WORKDIR /home/appuser/app
+
+# Copy the binary from the build stage
 COPY --from=builder /usr/src/app/target/aarch64-unknown-linux-gnu/release/qr_code_server .
 
-# Ensure the binary has execute permissions
-RUN chmod +x ./qr_code_server
-
+# Set the ownership and permissions
+RUN chown -R appuser:appgroup /home/appuser/app
 USER appuser
 
-# Expose the port the app runs on
-EXPOSE 8080
-
-# Run the application
-CMD ["./qr_code_server"]
+# Set the entrypoint
+ENTRYPOINT ["./qr_code_server"]
