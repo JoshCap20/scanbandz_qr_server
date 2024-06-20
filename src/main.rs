@@ -1,8 +1,8 @@
 use actix_web::{web, App, HttpRequest, HttpServer, Responder, HttpResponse};
 use qrcode::QrCode;
 use qrcode::render::svg;
-use std::io::Cursor;
-use base64::{encode, STANDARD};
+use base64::engine::general_purpose::STANDARD;
+use base64::Engine;
 
 async fn generate_qr(req: HttpRequest) -> impl Responder {
     let query_string = req.query_string();
@@ -19,7 +19,7 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
             
             let response = format!(
                 "<html><body><img src=\"data:image/svg+xml;base64,{}\"></body></html>",
-                encode(svg)
+                STANDARD.encode(svg)
             );
 
             HttpResponse::Ok()
