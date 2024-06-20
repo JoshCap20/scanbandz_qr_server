@@ -6,6 +6,8 @@ use base64::Engine;
 
 async fn generate_qr(req: HttpRequest) -> impl Responder {
     let query_string = req.query_string();
+
+    // Check query string is not empty
     if query_string.is_empty() {
         return HttpResponse::BadRequest().body("Query string is empty");
     }
@@ -23,7 +25,7 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
                 .build();
             
             let response = format!(
-                "<html><body><img src=\"data:image/svg+xml;base64,{}\"></body></html>",
+                "<img src=\"data:image/svg+xml;base64,{}\">",
                 STANDARD.encode(svg)
             );
 
