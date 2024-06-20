@@ -17,19 +17,23 @@ COPY . .
 RUN rustup target add aarch64-unknown-linux-gnu
 RUN cargo build --release --target=aarch64-unknown-linux-gnu
 
-# Use an Alpine base image for the runtime
-FROM alpine:3.18
+# Use an Ubuntu base image for the runtime to avoid GLIBC issues
+FROM ubuntu:22.04
 
 # Install necessary runtime dependencies
-RUN apk add --no-cache libssl1.1
+RUN apt-get update && apt-get install -y libssl-dev
 
 # Set the working directory
 WORKDIR /home/appuser/app
 
 # Add a non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
+# Copy the built binary from the builder stage
 COPY --from=builder /usr/src/app/target/aarch64-unknown-linux-gnu/release/qr_code_server .
+
+# Ensure the binary has execute permissions
+RUN chmod +x ./qr_code_server
 
 USER appuser
 
