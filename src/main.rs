@@ -12,7 +12,7 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
         return HttpResponse::BadRequest().body("Query string is empty");
     }
 
-    // Check length is between 10 and 75 characters
+    // Check length is between 50 and 1000 characters
     if query_string.len() < 50 || query_string.len() > 1000 {
         return HttpResponse::BadRequest().body("Invalid query string");
     }
