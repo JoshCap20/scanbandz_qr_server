@@ -32,7 +32,7 @@ jobs:
         push: true
         tags: scanbandz.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_b58d6751ac1549ebb33736f226b14b28 }}/qr_code_server:${{ github.sha }}
         file: ./Dockerfile
-        platforms: linux/arm64
+        platforms: linux/arm64,linux/amd64
 
   deploy:
     runs-on: ubuntu-latest
