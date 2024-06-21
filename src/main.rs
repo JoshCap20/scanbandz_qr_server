@@ -1,8 +1,8 @@
-use actix_web::{web, App, HttpRequest, HttpServer, Responder, HttpResponse};
-use qrcode::QrCode;
-use qrcode::render::svg;
+use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use base64::engine::general_purpose::STANDARD;
 use base64::Engine;
+use qrcode::render::svg;
+use qrcode::QrCode;
 
 async fn generate_qr(req: HttpRequest) -> impl Responder {
     let query_string = req.query_string();
@@ -12,18 +12,19 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
         return HttpResponse::BadRequest().body("Query string is empty");
     }
 
-    // Check length is between 10 and 75 characters
+    // Check length is between 50 and 1000 characters
     if query_string.len() < 50 || query_string.len() > 1000 {
         return HttpResponse::BadRequest().body("Invalid query string");
     }
 
     match QrCode::new(query_string) {
         Ok(code) => {
-            let svg = code.render::<svg::Color>()
+            let svg = code
+                .render::<svg::Color>()
                 .min_dimensions(200, 200)
                 .max_dimensions(400, 400)
                 .build();
-            
+
             let response = format!(
                 "<img src=\"data:image/svg+xml;base64,{}\">",
                 STANDARD.encode(svg)
@@ -39,12 +40,9 @@ async fn generate_qr(req: HttpRequest) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .route("/generate", web::get().to(generate_qr))
-    })
-    .workers(num_cpus::get() * 2)  // Number of worker threads
-    .bind("0.0.0.0:8080")?
-    .run()
-    .await
+    HttpServer::new(|| App::new().route("/generate", web::get().to(generate_qr)))
+        .workers(num_cpus::get() * 2) // Number of worker threads
+        .bind("0.0.0.0:8080")?
+        .run()
+        .await
 }
